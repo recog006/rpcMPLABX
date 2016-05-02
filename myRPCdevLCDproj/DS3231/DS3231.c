@@ -8,7 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ds3231.h"
+#include "DS3231.h"
+#include "I2C_driver/myI2C.h"
 //   #include "my_i2c.h"  ?????
 
 //==============================================================================

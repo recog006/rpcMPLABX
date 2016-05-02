@@ -27,6 +27,8 @@
 #include "Initialize_MCU/initialization.h"
 #include "Initialize_MCU/myDELAYS.h"
 
+#include "DS3231/DS3231.h"
+#include "I2C_driver/myI2C.h"
 #include "LCD_driver/LCD_20x4_drvrs.h"
 #include "USART_driver/msgserials.h"
 
