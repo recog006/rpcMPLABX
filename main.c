@@ -38,7 +38,6 @@ word idum;                       /* Gen purpose "word" var ... */
 
 byte hbuf[17] = { "0123456789ABCDEF" };
 byte sbuf[17] = { "0123456789ABCDEF" };
-// #pragma idata
 
 // *** END of GLOBAL VAR declarations ....................
 
@@ -62,9 +61,10 @@ byte sbuf[17] = { "0123456789ABCDEF" };
 void main(void) {
     init();
     id_print();
+    Delay_msec(2000);
     Nop();
     Nop();
-    Nop();
+    
     Nop();
     Nop();
 //
