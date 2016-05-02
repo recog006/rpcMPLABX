@@ -13,8 +13,8 @@
 #include <xc.h>             // .......  
 #include <pic18f46k22.h>
 
-#define I2C1_SCL	TRISCbits.TRISC3
-#define I2C1_SDA	TRISCbits.TRISC4
+// #define I2C1_SCL	TRISCbits.TRISC3  // SEE initialization.h 
+// #define I2C1_SDA	TRISCbits.TRISC4
 
 extern void I2C_Init(unsigned char clock_output);
 extern void I2C_Start(void);
