@@ -66,9 +66,6 @@ void main(void) {
     Delay_msec(2000);
     Nop();
     Nop();
-    
-    Nop();
-    Nop();
 //
     while(1){
        putrs1USART("*** ROGER *** \n\r\a"); 
