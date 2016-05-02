@@ -42,26 +42,18 @@ void intrDISAB(void){
 // ******* PORT PIN INIT's ..................
 
 void init_ports(void){
-    LATA = 0;           /* Set the byte ... Microchip uses "0b" prefix
-                           to set binary values.  See the C Compiler
-                           User's Guide page 16 for language specifics.    */
-
-    TRISA = 0b11011111; /* RA7 and R6 CER RES (OPTIONAL) ... OTHERS INPUTS */
-//  CLKI CLKO CUST1 FEEDENC  PWRSENSV(AN3) EDSPOT(AN2) ICM(AN1) IFM(AN0)
+    LATA = 0;     
+    TRISA = 0xFF; /* INPUTS */
 //
-    LATB = 0;            /* Configure PORT B pins ........................ */
-    TRISB = 0b11111111;  /* ICD pins, motor drives, interrupt inputs ..... */
-//  PGD(RB7)    PGC(RB6)      TP43(RB5)          CUTHOME(RB4) 
-//  SWEDS(RB3)  CHSNSR(RB2)   INTRCM(RB1/INT1)   SSW(RB0/INT0)
+    LATB = 0;     /* Configure PORT B pi.................... */
+    TRISB = 0b11100111;  /* ICD pins, ..... */
 //
     LATC = 0;
-    TRISC = 0b11111001;
-/* RC7(RX)         RC6(TX)             RC5(RESET PB)        RC4(FOOTSW)
- * RC3(EOW_SNSRV)  RC2(P1A - PWM OUT)  RC1(P2A - 1HDRIVE)   RC0(TP38/T1CKI) ... */
+    TRISC = 0b11111110;
+/* INPUTS/PLIB config'd ... TST_OUT ... */
 
-	LATD = 0x03;
-	TRISD = 0b11110000;
-// RD7   RD6   SPDSELECT(RD5)
+	LATD = 0;
+    TRISD = 0xFF;   /* ALL INPUTS ... */
 //
 	LATE = 0;
 	TRISE = 0b11111000;
@@ -70,8 +62,8 @@ void init_ports(void){
 //   1 = Dig inp bufr disabled
 //   0 = Dig inp bufr enabled
 //
-	ANSELA = 0x0F;    ANSELB = 0; 
-    ANSELC = 0x08;    ANSELD = 0;   ANSELE = 0;
+	ANSELA = 0x01;    ANSELB = 0; 
+    ANSELC = 0;       ANSELD = 0;   ANSELE = 0;
 	Nop();
 	Nop();
 	Nop();
