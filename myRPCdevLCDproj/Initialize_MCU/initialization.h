@@ -1,9 +1,15 @@
+/*
+ *
+ *  FILE:    initialization.h
+ *  AUTHOR:  RGF
+ * 
+ *  
+ */
+
 //
-//  MODULE   : initialization.h
 //
-//
-#ifndef INITIALIZATION_H
-#define INITIALIZATION_H
+#ifndef XC_INITIALIZATION_H
+#define XC_INITIALIZATION_H
 
 /* ************************************************************************
  * ************************************************************************
@@ -22,7 +28,18 @@ typedef unsigned long dword;
  * ********
  * ************************************************************************ */
 
-// OUTPUTS
+// INPUTS
+#define PBSW1   PORTBbits.RB0   // PB sw 1  - "SELECT"
+#define PBSW2   PORTBbits.RB1   // PB sw 2  - "ADD data"
+#define PBSW3   PORTBbits.RB2   // PB sw 3  - "AM / PM"
+
+
+// OUTPUTS ..................................
+#define LCD_RW    LATBbits.LATB3
+#define LCD_EN    LATBbits.LATB4
+
+#define TST_OUT   LATCbits.LATC0
+
 #define LCD_PWR   LATEbits.LATE0
 #define BACKLIGHT LATEbits.LATE1
 #define LCD_RS    LATEbits.LATE2
@@ -31,8 +48,10 @@ typedef unsigned long dword;
 //
 #define LCD_PORT  LATD
 
-#define LCD_RW    LATBbits.LATB3
-#define LCD_EN    LATBbits.LATB4
+// I2C CONTROL ................................
+#define I2C1_SCL	TRISCbits.TRISC3
+#define I2C1_SDA	TRISCbits.TRISC4
+
 
 /* *****  EXPORTED FUNCTION PROTOTYPES **** */
 // Function prototypes of non-static functions
