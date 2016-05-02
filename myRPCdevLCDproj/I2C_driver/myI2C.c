@@ -9,6 +9,8 @@
 #include <pic18f46k22.h>
 
 #include "Initialize_MCU/configMCU.h"
+#include "Initialize_MCU/initialization.h"
+
 #include "myI2C.h"
 
 void I2C_Init(unsigned char clock_output){
