@@ -23,6 +23,13 @@ void I2C_Init(unsigned char clock_output){
     I2C1_SDA = 1;                   // Set SDA1 (PORTC,4) pin to input
     SSPCON1 |= 0b00100000;          // Enable synchronous serial port
     SSPADD = clock_output;          // Clock = FOSC/(4 * (SSPADD + 1))
+//
+//  NOTE: SSPxADD is "BAUD RATE" CLK ("Master mode")
+//        SSPxADD = (Fosc / (4* Fclock)) - 1
+//        USE Fclock of 100 KHZ
+//            Fosc = 16000000
+//        SSPxADD = 40 - 1 = 39
+//    
 }
 
 void I2C_Start(void){
@@ -79,16 +86,17 @@ unsigned char I2C_WriteByte(unsigned char data_out){
     I2C_Idle();
     SSPBUF = data_out;           // Write single byte to SSP1BUF
     if(SSPCON1bits.WCOL)         // Test if write collision occurred
-    return(1);                   // If WCOL bit is set return negative #
+        return(1);               // If WCOL bit is set return negative #
     
     else {
         if(((SSPCON1&0x0F)==0x08) || ((SSPCON1&0x0F)==0x0B)) //master mode only
         {
-            while(SSPSTATbits.BF); // Wait until write cycle is complete
+            while(SSPSTATbits.BF);     // Wait until write cycle is complete
             I2C_Idle();                // Ensure module is idle
             if(SSPCON2bits.ACKSTAT)    // Test for ACK condition received
-            return(2);		           // Return NACK
-        else return(0);        // Return ACK
+              return(2);		       // Return NACK
+            else 
+              return(0);               // Return ACK
        }
       } return(0);
 }

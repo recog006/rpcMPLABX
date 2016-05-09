@@ -10,8 +10,8 @@
 #ifndef XC_myI2C_H
 #define	XC_myI2C_H
 
-#include <xc.h>             // .......  
-#include <pic18f46k22.h>
+// #include <xc.h>             // .......  
+// #include <pic18f46k22.h>
 
 // #define I2C1_SCL	TRISCbits.TRISC3  // SEE initialization.h 
 // #define I2C1_SDA	TRISCbits.TRISC4

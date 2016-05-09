@@ -33,8 +33,11 @@ typedef unsigned long dword;
 #define PBSW2   PORTBbits.RB1   // PB sw 2  - "ADD data"
 #define PBSW3   PORTBbits.RB2   // PB sw 3  - "AM / PM"
 
+#define USB_RTS PORTCbits.RC5   // USB_RTS signal from USB adapter
 
 // OUTPUTS ..................................
+#define USB_CTS   LATBbits.LATB5
+
 #define LCD_RW    LATBbits.LATB3
 #define LCD_EN    LATBbits.LATB4
 

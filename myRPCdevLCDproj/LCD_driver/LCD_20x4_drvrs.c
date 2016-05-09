@@ -108,12 +108,11 @@ void wait4BFclr(void){
     LCD_RW = 1;  Nop();  Nop();
 
     BFchk: Nop();
-    LCD_EN = 1;  Nop();  Nop();
-    btemp = PORTD;
-    btemp &= 0x80;
-    LCD_EN = 0;
-    if (btemp == 0x80) goto BFchk;
-    Nop();
+        LCD_EN = 1;  Nop();  Nop();
+        btemp = PORTD;
+        btemp &= 0x80;
+        LCD_EN = 0;
+        if (btemp == 0x80) goto BFchk;
 }
 
 void clearLCD(void){
@@ -177,17 +176,16 @@ void shiftcursorLCDleft(void){
 
 void initLCD(void){
     byte btemp;
-    word itemp;
     
     TRISD = 0xFF;                   // Set PORTD to INPUT ...
 //    
     LCD_EN = 0;    LCD_RW = 0;     LCD_RS = 0;
     LCD_PWR = 1;   BACKLIGHT = 1;   // POWER on .....
-    LCD_PORT = 0b00110000;              // INIT state, PORTD latch bits ....
+    LCD_PORT = 0b00110000;          // INIT state, PORTD latch bits ....
 //
     for (btemp=0; btemp<6; btemp++)  Delay_msec(20);   
     Nop();  Nop();  Nop(); 
-    Nop();  Nop();  Nop();          // WAKE up time ...
+    Nop();  Nop();  Nop();         // WAKE up time ...
  
     writeLCDcmd(0x38);             // OR 0x30 ????
     Delay_msec(20);    
@@ -213,16 +211,11 @@ void initLCD(void){
     Delay_msec(20);    
     Nop();   Nop();   Nop();   
 //      
-    Nop();
-    Nop();
-    
     wait4BFclr();
     homeLCD();
     wait4BFclr();
     dispLCD();
     wait4BFclr();
- //
-    Nop();    
  }
 
 void LCDdisplaySTRING(char *dispSTR){

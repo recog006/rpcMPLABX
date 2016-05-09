@@ -41,7 +41,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 
 #include <plib/delays.h>
 #include <plib/usart.h>
@@ -64,19 +63,23 @@ word idum;                       /* Gen purpose "word" var ... */
 byte hbuf[17] = "0123456789ABCDEF";
 byte sbuf[17] = "0123456789ABCDEF";
 
-byte dispSTR1[21] = "1   RPC RGF 2016   1";
-byte dispSTR2[21] = "2 DS3231";
-byte dispSTR3[21] = "3 AT24C32";
-byte dispSTR4[21] = "4 tbd RTC";
+byte dispSTR1[21] = "1 0123456789ABCDEF 1";
+byte dispSTR2[21] = "2 FEDCBA9876543210 2";
+byte dispSTR3[21] = "3 RPC ELECTRONIC INC";
+byte dispSTR4[21] = "4 RPC ENGINEERING ..";
 
 byte dispSTR5[21] = "5 EMAIL: rfischer@  ";
 byte dispSTR6[21] = "6 rpcelectronics.com";
 byte dispSTR7[21] = "7 RTC DAY HR MONTH  ";
-byte dispSTR8[21] = "RTC H:M:S:";
+byte dispSTR8[21] = "8 Have a nice day!  ";
 
 byte RTC_seconds @ 0x0200;   
 byte RTC_minutes;
 byte RTC_hour;         // Use 24 hour mode ....
+
+
+
+
 
 // *** END of GLOBAL VAR declarations ....................
 
@@ -88,48 +91,6 @@ byte RTC_hour;         // Use 24 hour mode ....
 // ***********************************************
 // *** LOCAL ("main.c") subroutines here .........
 
-
-
-// Set the RTC variables by reading DS3231 .......
-
-void getRTCtime(void){
-    RTC_seconds = DS3231_GetInfo(0);   // Get "SECONDS" ... 
-    RTC_minutes = DS3231_GetInfo(1);   // 
-    RTC_hour = DS3231_GetInfo(2);      //  
-    Nop();
-}
-
-// Send to USART the RTC variables ...
-// Display on line 4 of LCD ..........
-
-void displayRTCtime(void){
-    crlf_print();
- //    
-    bdum = RTC_hour;
-    btoa();
-    strcat(dispSTR8, sbuf);
-    strcpy(sbuf, ":");
-    strcat(dispSTR8, sbuf);
-//    
-    bdum = RTC_minutes;
-    btoa();
-    strcat(dispSTR8, sbuf);
-    strcpy(sbuf, ":");
-    strcat(dispSTR8, sbuf);
-//
-    bdum = RTC_seconds;
-    btoa();
-    strcat(dispSTR8, sbuf);   
-    putrs1USART(sbuf);
-    crlf_print();  
-    Nop();  
-    Nop();
-//
-    LCDterm(4);         // Set LCD line
-    LCDdisplaySTRING(dispSTR8); 
-    Nop();
-    Nop();
-}
 
 
 // *** END of LOCAL subroutines ..................
@@ -152,20 +113,32 @@ void main(void) {
     Nop();
     Nop();
 //    
-    LCDterm(1);            // Set LCD line
-    LCDdisplaySTRING(dispSTR1);  
-    Delay_msec(4000);   
-//    
-    bdum = 0;
-    bdum = initRTCmodule(0xD0);   // Set device addr ...
+    LCDterm(1);         // Set LCD line
+    LCDdisplaySTRING(dispSTR7);   
+
+    
+    I2C_Close();
+    I2C_Init(39);       // I2C 100 KHZ, 16 MHZ OSC (see note in "myI2C.c")
     Nop();
     Nop();
+//
+    
+    
+    
+    
+    
+
+
+    Delay_msec(2000);
     Nop();
-    Delay_msec(3000);    
+    Nop();
+//
+
+    Delay_msec(2000);      
 //
     while(1){
        putrs1USART("*** ROGER *** \n\r\a"); 
-       Delay_msec(5000);
+       Delay_msec(3000);
        Nop();  
     }
 //

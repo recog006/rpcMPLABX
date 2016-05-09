@@ -46,7 +46,8 @@ void init_ports(void){
     TRISA = 0xFF; /* INPUTS */
 //
     LATB = 0;     /* Configure PORT B pi.................... */
-    TRISB = 0b11100111;  /* ICD pins, ..... */
+    TRISB = 0b11000111; 
+/* ICD pins, RB5=USB_CTS, RB4=LCD_EN, RB3=LCD_RW, RB2=PBSW3 ..... */
 //
     LATC = 0;
     TRISC = 0b11111110;
