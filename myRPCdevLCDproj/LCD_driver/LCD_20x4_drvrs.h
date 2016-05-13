@@ -7,42 +7,43 @@
 
 // This is a guard condition so that contents of this file are not included
 // more than once.  
-#ifndef LCD_20x4_drvrs_h
-#define	LCD_20x4_drvrs_h
+#ifndef LCD_20x4_drvrs_H
+#define	LCD_20x4_drvrs_H
 
-// FUNCTION: writeLCDcmd
-// INPUT:    cmd 
+//
+// FUNCTION DECLARATIONS: writeLCDcmd, etc ....
+// 
 
-void writeLCDcmd(char cmd);
+extern void writeLCDcmd(unsigned char cmdBYTE);
 
-void writeLCDdata(char btemp);
+extern void writeLCDdata(unsigned char dBYTE);
 
-void wait4BFclr(void);
+extern void wait4BFclr(void);
 
-void clearLCD(void);
+extern unsigned char readLCDdata(unsigned char addrSELECT);
 
-void homeLCD(void);
+extern void clearLCD(void);
 
-void dispLCD(void);
+extern void homeLCD(void);
 
-void entrymodeLCD(void);
+extern void dispLCD(void);
 
-void shiftcursorLCDright(void);
+extern void entrymodeLCD(void);
 
-void shiftcursorLCDleft(void);
+extern void shiftcursorLCDright(void);
 
-void initLCD(void);
+extern void shiftcursorLCDleft(void);
 
-void LCDdisplaySTRING(char *dispSTR);
+extern void initLCD(void);
 
-void LCDterm(char LCDlineCNTR);
+extern void LCDdisplaySTRING(unsigned char LCDlineCNTR, char *dispSTR);
+
 //
 //
-//
-void LCDshift5to2(void);
-void LCDshift6to3(void);
-void LCDshift7to4(void);
-void LCDshift8to5(void);
+extern void LCDshift5to2(void);
+extern void LCDshift6to3(void);
+extern void LCDshift7to4(void);
+extern void LCDshift8to5(void);
 //
 //
 #endif	/* LCD_20x4_drvrs_h */

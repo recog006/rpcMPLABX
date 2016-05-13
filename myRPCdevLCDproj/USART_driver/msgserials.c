@@ -13,7 +13,7 @@
 //
 
 #include <xc.h>
-#include <p18f46k22.h>
+// #include <p18f46k22.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,11 +28,11 @@
 
 #include "msgserials.h"
 
-extern byte bdum;
-extern word idum;
+extern unsigned char bdum;
+extern unsigned int idum;
  
-extern char hbuf[17];
-extern char sbuf[17];
+extern char hbuf[];
+extern char sbuf[];
 
 /*  ************************************************************************
  *  **********   Serial communication functions   **************************
@@ -110,20 +110,21 @@ void bytetohex(void){
 // ...............................................................
 
 void crlf_print(void){
-    putrs1USART("\n\r");
+    if (USB_RTS == 0) putrs1USART("\n\r");
     Nop();
     Nop();
 }
 
 void id_print(void){    /* ****  INITIAL ID MESSAGE ****** */
-	crlf_print();
-	crlf_print();
-//
-	Nop();
-	Nop();
-	Nop();
-//
-    putrs1USART("*** USART1 19200 BAUD ***\n\r");
+    for (bdum=0; bdum<10; bdum++) crlf_print();
+    Nop();
+    Nop();
+//   
+    outCHK: if (USB_RTS != 0) goto outCHK;
+    
+    putrs1USART(" *************************************** \n\r");
+    putrs1USART(" ********* USART1 19200 BAUD *********** \n\r");
+    putrs1USART(" *************************************** \n\r");  
 	crlf_print();
 	Nop();
 	Nop();
@@ -132,11 +133,15 @@ void id_print(void){    /* ****  INITIAL ID MESSAGE ****** */
 	Nop();
 }
 
-// REMINDER about using USART2 instead of USART1 ....
-
 void menu(void){    
+    outCHK: if (USB_RTS != 0) goto outCHK;
+          
     crlf_print();
-    putrs1USART("*** MENU  *** \n\r\a");
+    putrs1USART("****** MENU *** \n\r");
+    putrs1USART("1. Set RTC time \n\r");
+    putrs1USART("2. Time OK, RUN \n\r"); 
+    putrs1USART("3. Another item \n\r");
+    putrs1USART("ENTER SELECTION: "); 
     Nop();
     Nop();
 } 

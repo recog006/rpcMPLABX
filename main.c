@@ -37,13 +37,12 @@
  */
 
 #include <xc.h>
-#include <pic18f46k22.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
-#include <plib/delays.h>
 #include <plib/usart.h>
 
 #include "Initialize_MCU/configMCU.h"
@@ -55,78 +54,95 @@
 #include "LCD_driver/LCD_20x4_drvrs.h"
 #include "USART_driver/msgserials.h"
 
+const char dispSTR1[] = "1 RPC ELEC RGF 2016 ";
+const char dispSTR2[] = "2 DS3231 ********** ";
+const char dispSTR3[] = "3 AT24C32 ********* ";
+const char dispSTR4[] = "4 This is line FOUR";
 
-// *** GLOBAL VAR declarations ...........................
+const char dispSTR5[] = "5 EMAIL: rfischer@  ";
+const char dispSTR6[] = "6 rpcelectronics.com";
+const char dispSTR7[] = "7 RTC DAY HR MONTH  ";
+const char dispSTR8[] = "RTC H:M:S ";
 
-byte bdum @ 0x0100;              /* Gen purpose "byte" var ................... */
-word idum;                       /* Gen purpose "word" var ... */
+const char hbuf[] = "0123456789ABCDEF";
 
-byte hbuf[17] = "0123456789ABCDEF";
-byte sbuf[17] = "0123456789ABCDEF";
+/* *** GLOBAL VAR declarations .................................... */
 
-byte dispSTR1[21] = "1   RPC RGF 2016   1";
-byte dispSTR2[21] = "2 DS3231";
-byte dispSTR3[21] = "3 AT24C32";
-byte dispSTR4[21] = "4 tbd RTC";
+unsigned char bdum @ 0x0100;     /* Gen purpose "byte" var ........ */
+unsigned int idum;               /* Gen purpose "word" var ........ */
+unsigned int mloopCNTR;
 
-byte dispSTR5[21] = "5 EMAIL: rfischer@  ";
-byte dispSTR6[21] = "6 rpcelectronics.com";
-byte dispSTR7[21] = "7 RTC DAY HR MONTH  ";
-byte dispSTR8[21] = "RTC H:M:S:";
+unsigned char rbyte1;            
+unsigned char cstatus;
 
-byte RTC_seconds @ 0x0200;   
-byte RTC_minutes;
-byte RTC_hour;         // Use 24 hour mode ....
+unsigned char RTC_seconds;   
+unsigned char RTC_minutes;
+unsigned char RTC_hour;         // Use 24 hour mode ....
 
-// *** END of GLOBAL VAR declarations ....................
+char sbuf[21] @ 0x0200;
+char RTCbuf[21] @ 0x0300;
 
-//
-// INTERRUPTS .....
-//
+/* *** END of GLOBAL VAR declarations .................... */
 
+/* *** INTERRUPTS ........................................
+ *             
+ *   Check the source of the interrupt :
+ *
+ *   PIR1bits.RC1IF = USART 1 receive reg int flag bit....
+ *
+ *   CCP2 ... also high pri ...
+ *   Timer 0
+ *   Timer 2
+ *
+ *   .............    */
 
-// ***********************************************
-// *** LOCAL ("main.c") subroutines here .........
-
-
-
-// Set the RTC variables by reading DS3231 .......
-
-void getRTCtime(void){
-    RTC_seconds = DS3231_GetInfo(0);   // Get "SECONDS" ... 
-    RTC_minutes = DS3231_GetInfo(1);   // 
-    RTC_hour = DS3231_GetInfo(2);      //  
+void interrupt low_priority low_isr(void){
     Nop();
+    Nop();   
 }
 
-// Send to USART the RTC variables ...
-// Display on line 4 of LCD ..........
-
-void displayRTCtime(void){
-    crlf_print();
- //    
-    bdum = RTC_hour;
-    btoa();
-    strcat(dispSTR8, sbuf);
-    strcpy(sbuf, ":");
-    strcat(dispSTR8, sbuf);
-//    
-    bdum = RTC_minutes;
-    btoa();
-    strcat(dispSTR8, sbuf);
-    strcpy(sbuf, ":");
-    strcat(dispSTR8, sbuf);
-//
-    bdum = RTC_seconds;
-    btoa();
-    strcat(dispSTR8, sbuf);   
-    putrs1USART(sbuf);
-    crlf_print();  
-    Nop();  
+void interrupt high_isr(void){
+    if (PIR1bits.RC1IF == 1) {
+        rbyte1 = RCREG1;
+        cstatus = cstatus | 0x80;  /* Set the comm status bit */
+		Nop();
+		Nop();
+        PIR1bits.RC1IF = 0;    /* Clear the flag bit to receive another */
+	};   
     Nop();
-//
-    LCDterm(4);         // Set LCD line
-    LCDdisplaySTRING(dispSTR8); 
+    Nop();    
+}
+
+// *******************************************************
+// *** LOCAL ("main.c") subroutines here .................
+
+
+void MENUsetRTC(void){
+  putrs1USART("TIME SET \n\r");    
+    
+}
+
+void MENUtbd(void){
+   putrs1USART(" .... TBD .... \n\r");   
+    
+}
+
+
+
+
+// Zero the RTC clock ...
+void zeroRTCtime(void){
+    DS3231_SetInfo(0, 0);
+    DS3231_SetInfo(1, 0);
+    DS3231_SetInfo(2, 0); 
+    Nop();    
+}
+
+
+// Send RTC variables to LCD
+// display on line 4 .......
+
+void LCDdisplayRTC(void){
     Nop();
     Nop();
 }
@@ -141,33 +157,127 @@ void displayRTCtime(void){
 
 void main(void) {
     init();             // INIT the MCU and USARTs ............
+    id_print();         // ID msg OUT on serial comm  
+    Delay_msec(2000); 
     Nop();
     Nop();
-//
-    id_print();         // ID msg OUT on serial comm   
+// 
+    initLCD();          // LCD power ON and back light ON ....
     Nop();
+    Nop();
+    
+// *** The following provides a test display to the LCD --- FOUR LINES ....    
+    strcpy(sbuf, dispSTR1);
+    LCDdisplaySTRING(1, sbuf);
+    strcpy(sbuf, dispSTR2);
+    LCDdisplaySTRING(2, sbuf);
+    strcpy(sbuf, dispSTR3);
+    LCDdisplaySTRING(3, sbuf);
+    strcpy(sbuf, dispSTR4);
+    LCDdisplaySTRING(4, sbuf);
+// *** END of LCD test display .............................................
+    
+    initRTCmodule(0xD0);
+   
+    crlf_print();
+    DS3231_GetCalendar(RTCbuf);
+    putrs1USART(RTCbuf);
+    crlf_print();
     Nop();  
+    
+    bdum = DS3231_GetTime(RTCbuf);
+    putrs1USART("DS3231_GetTime return byte: 0x"); 
+    htoa();
+    putrs1USART(sbuf);
+    crlf_print();
+    Nop();
+    
+    putrs1USART("DS3231_GetTime: ");
+    putrs1USART(RTCbuf);
+    crlf_print();
+    Nop(); 
+    
+    Delay_msec(1000);
+    homeLCD();
+    clearLCD();
+    Nop();
+    
+    bdum = DS3231_GetTime(RTCbuf);
+    LCDdisplaySTRING(4, RTCbuf); 
+    Delay_msec(2000);  
+    
+//    DS3231_SetInfo(HOURS, 23);
+//    zeroRTCtime(); 
 //
-    initLCD();
-    Nop();
-    Nop();
-//    
-    LCDterm(1);            // Set LCD line
-    LCDdisplaySTRING(dispSTR1);  
-    Delay_msec(4000);   
-//    
-    bdum = 0;
-    bdum = initRTCmodule(0xD0);   // Set device addr ...
-    Nop();
-    Nop();
-    Nop();
-    Delay_msec(3000);    
+//    bdum =  RTC_seconds;
+//    bytetohex();
+//    if (USB_RTS == 0) putrs1USART(sbuf); 
+//    crlf_print();   
 //
+//    bdum =  RTC_minutes;
+//    bytetohex();
+//    if (USB_RTS == 0) putrs1USART(sbuf); 
+//    crlf_print();   
+//
+//    bdum =  RTC_hour;
+//    bytetohex();
+//    if (USB_RTS == 0) putrs1USART(sbuf); 
+//    crlf_print();   
+//
+//    crlf_print(); 
+    
+    cstatus = 0;
+    menu();  
+    intrENAB();
+    
+    select_loop: bdum = cstatus & 0x80;
+    if (bdum == 0x80){
+        switch(rbyte1){
+            case '1' : MENUsetRTC();
+            break;
+            
+            case '2' : MENUtbd();
+            break;
+            
+            default : MENUtbd();
+            break;
+        };
+        Nop();
+        Nop();
+        cstatus = 0;
+        goto endLOOP;
+    };
+    
+    Nop();
+    Nop();
+    goto select_loop;
+    
+    endLOOP: Nop();
+    mloopCNTR = 0;
     while(1){
-       putrs1USART("*** ROGER *** \n\r\a"); 
-       Delay_msec(5000);
-       Nop();  
-    }
+       if (USB_RTS == 0) putrs1USART(" mloopCNTR: 0x");
+       idum = mloopCNTR;
+       htoa();       /* Converts idum into sbuf */
+       if (USB_RTS == 0) putrs1USART(sbuf); 
+       crlf_print();
+//
+//       bdum = DS3231_GetTime(RTCbuf);
+//       bytetohex();
+//       if (USB_RTS == 0) putrs1USART(sbuf);  
+//       crlf_print();
+       
+//        LCDdisplaySTRING(4, RTCbuf);
+        
+//       getRTCtime();
+//       LCDdisplayRTC();
+//       Nop();
+//    
+       bdum = DS3231_GetTime(RTCbuf);
+       LCDdisplaySTRING(4, RTCbuf); 
+       
+       mloopCNTR++;   
+       Delay_msec(1000);
+     };
 //
 //    
     return;

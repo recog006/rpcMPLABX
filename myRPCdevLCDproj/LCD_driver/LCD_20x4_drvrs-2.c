@@ -14,6 +14,7 @@
 #include "LCD_20x4_drvrs.h"
 
 extern unsigned char bdum;
+extern unsigned char bdum1, bdum2, bdum3;    /* FOR DEBUGGING */
 extern unsigned int idum;
 
 extern char dispSTR1[];
@@ -44,7 +45,7 @@ void dataLCDout(unsigned char dbBYTE){
 }
 
 void writeLCDcmd(unsigned char cmdBYTE){
-    LCD_RS = 0;               // "Instruction" reg
+    LCD_RS = 0;
     LCD_RW = 0;               // WR mode
     Nop();  Nop();  Nop();    // to be in WR mode ...
 //
@@ -57,7 +58,7 @@ void writeLCDcmd(unsigned char cmdBYTE){
     Nop();  Nop();  Nop();  
 //    
     LCD_EN = 1;     Nop();    // RAISE E signal 
-    Delay_msec(1);            // TIME for LCD 
+    Delay_msec(10);           // TIME for LCD 
     Nop();  Nop();  Nop();    // to see cmd BYTE ..........
     LCD_EN = 0;               // LOWER E signal
     Nop();  Nop();  Nop(); 
@@ -69,7 +70,7 @@ void writeLCDcmd(unsigned char cmdBYTE){
 }
 
 void writeLCDdata(unsigned char dBYTE){
-    LCD_RS = 1;               // "Data" reg
+    LCD_RS = 1;
     LCD_RW = 0;               // WR mode
     Nop();  Nop();  Nop();    // to be in WR mode ...
 //
@@ -82,7 +83,7 @@ void writeLCDdata(unsigned char dBYTE){
     Nop();  Nop();  Nop();  
 //    
     LCD_EN = 1;     Nop();    // RAISE E signal 
-    Delay_msec(1);            // TIME for LCD 
+    Delay_msec(10);           // TIME for LCD 
     Nop();  Nop();  Nop();    // to see data byte ..........
     LCD_EN = 0;               // LOWER E signal
     Nop();  Nop();  Nop(); 
@@ -93,32 +94,62 @@ void writeLCDdata(unsigned char dBYTE){
     Nop();  Nop();  Nop();
 }
 
-/* 
- * LOCAL function to "Read Busy flag and address"
- * 
- * NOTES:
- *   1. LCD_RS is low 
- *   2. Returned byte is BF (bit 7) and addr cntr (bits 6 thru 0)
- *  .........................................................   */
+void setDDRAMaddr(unsigned char addrCNTR){
+    addrCNTR |= 0x80;   
+    writeLCDcmd(addrCNTR);
+    Nop();
+    Nop();    
+}
 
-unsigned char readBFaddrCNTR(void){
+/* LOCAL function to "Read data from RAM" .... */
+
+unsigned char readLCDdata(unsigned char addrCNTR){
     byte btemp;
-    
-    LCD_RS = 0;               // Set low to read BF and addr cntr ...
-    LCD_RW = 0;               // LCD no output ........
+ 
+    setDDRAMaddr(addrCNTR);
+    LCD_RS = 1;  LCD_RW = 1;   LCD_EN = 0;
     TRISD = 0xFF;             // Set PORTD to input ...    
     TRISBbits.RB2 = 1;
     TRISBbits.RB1 = 1;
-    Nop();   Nop();   Nop();  // Set lines ............
-    LCD_RW = 1;               // LCD output ...........
-    Nop();   Nop();   Nop();
+    Nop();   Nop();   Nop();  // Set lines ............   
+  
     LCD_EN = 1;
     Nop();   Nop();   Nop();   
     btemp = PORTD;            // Read PORTD, db lines from LCD ...
     if (LCDdb1 == 1) btemp |= 0x02; else btemp &= 0xFD;
     if (LCDdb0 == 1) btemp |= 0x01; else btemp &= 0xFE;
     LCD_EN = 0;
-    LCD_RW = 0;               // LCD no output ....
+      
+    Nop();
+    Nop();   
+    return btemp;    
+}
+
+/* 
+ * LOCAL function to "Read Busy flag and address"
+ * 
+ * NOTES:
+ *   1. LCD_RS is low 
+ *   2. LCD_EN must be high for Tpw = 150 nanosec (minimum)
+ *   3. Returned byte is BF (bit 7) and addr cntr (bits 6 thru 0)
+ *  .........................................................   */
+
+unsigned char readBFaddrCNTR(void){
+    byte btemp;
+    
+    LCD_RW = 1;  LCD_EN = 0;  LCD_RS = 0; 
+    TRISD = 0xFF;             // Set PORTD to input ...    
+    TRISBbits.RB2 = 1;
+    TRISBbits.RB1 = 1;
+    Nop();   Nop();   Nop();  // Set lines ............
+    
+    LCD_EN = 1;
+    Nop();   Nop();   Nop();   
+    btemp = PORTD;            // Read PORTD, db lines from LCD ...
+    if (LCDdb1 == 1) btemp |= 0x02; else btemp &= 0xFD;
+    if (LCDdb0 == 1) btemp |= 0x01; else btemp &= 0xFE;
+    LCD_EN = 0;
+    
     Nop();
     Nop(); 
     return btemp;
@@ -139,46 +170,6 @@ void wait4BFclr(void){
     Nop();
     Nop();
 }
-
-/* 
- * LOCAL function to "set DDRAM addr" ...
- * ...................................... */
-
-void setDDRAMaddr(unsigned char addrBYTE){
-    addrBYTE |= 0x80;   
-    writeLCDcmd(addrBYTE);
-    Nop();
-    Nop();    
-}
-
-/* LOCAL function to "Read data from RAM" ................
- * NOTES:    ...  */
-
-unsigned char readLCDdata(unsigned char addrSELECT){
-    byte btemp;
- 
-    setDDRAMaddr(addrSELECT);
-    LCD_RS = 1;               // Read data req'd ......
-    LCD_RW = 0;  
-    LCD_EN = 0;  
-    TRISD = 0xFF;             // Set PORTD to input ...    
-    TRISBbits.RB2 = 1;
-    TRISBbits.RB1 = 1;
-    Nop();   Nop();   Nop();  // Set lines ............   
-    LCD_RW = 1;               // Allow LCD to output to LCD "data bus" ....
-    Nop();   Nop();   Nop(); 
-    LCD_EN = 1;               // Start a data read ....
-    Nop();   Nop();   Nop();   
-    btemp = PORTD;            // Read PORTD, db lines from LCD ...
-    if (LCDdb1 == 1) btemp |= 0x02; else btemp &= 0xFD;
-    if (LCDdb0 == 1) btemp |= 0x01; else btemp &= 0xFE;
-    LCD_EN = 0;               // End of data read .....
-    LCD_RW = 0;               // Disable LCD output ...
-    Nop();
-    Nop();   
-    return btemp;    
-}
-
 
 void clearLCD(void){
     LCD_RS = 0;   LCD_RW = 0;
@@ -313,11 +304,12 @@ void initLCD(void){
     clearLCD();
     Nop();
     Nop();
-    Nop();
  }
 
 void LCDdisplaySTRING(unsigned char LCDlineCNTR, char *dispSTR){
-    byte btemp;  
+    byte indexCNTR;
+    byte btemp1, btemp2, btemp3;   // "Reads" of "DDRAM" ....
+    byte addrCNTR1, addrCNTR2, addrCNTR3;
     
     wait4BFclr();                  // NOT busy, proceed ....
     switch (LCDlineCNTR){
@@ -340,16 +332,53 @@ void LCDdisplaySTRING(unsigned char LCDlineCNTR, char *dispSTR){
     Nop();
     Nop();
     
-    btemp = 0;
-    while(dispSTR[btemp]!=0){
-        wait4BFclr();                  // NOT busy, proceed ....
-        writeLCDdata(dispSTR[btemp]);
-        btemp++;
-        Nop();
-        Nop();
-        Nop();
-    }
-    Nop();
+    indexCNTR = 0;
+    LCDdisplayLOOP: if (dispSTR[indexCNTR] == 0) goto exitLCDdisplayLOOP;
+        btemp1 = readBFaddrCNTR();
+        addrCNTR1 = 0x7F & btemp1;    // Get initial "DDRAM AC" ...
+        Nop();   Nop();   Nop();
+        wait4BFclr();                 // NOT busy, proceed ...
+        writeLCDdata(dispSTR[indexCNTR]);
+        Nop();   Nop();   Nop();
+        
+        btemp1 = readBFaddrCNTR();
+        addrCNTR1 = 0x7F & btemp1;    // Get initial "DDRAM AC" ...
+        Nop();   Nop();   Nop();
+        wait4BFclr();                 // NOT busy, proceed ...
+        writeLCDdata(dispSTR[indexCNTR]);
+        
+        
+        Nop();   Nop();   Nop();   
+        btemp1 = readLCDdata(addrCNTR0);
+        addrCNTR0++;
+        btemp2 = readLCDdata(addrCNTR0);
+        addrCNTR0++;
+        btemp3 = readLCDdata(addrCNTR0);
+        
+        if (dispSTR[indexCNTR] == btemp1){
+            Nop();
+            Nop();
+            Nop();
+            Delay_msec(1);
+            Nop();  Nop();  Nop();
+            indexCNTR++;
+            if (indexCNTR < 21) goto LCDdisplayLOOP;
+        } else {
+            
+            bdum1 = btemp1;  bdum2 = btemp2;  bdum3 = btemp3;
+            idum = addrCNTR0;
+            Nop();
+            Nop();
+            Nop();
+            Nop();
+            BACKLIGHT = 0;
+            errorLOOP: Nop();
+                Nop();
+                Nop();
+                goto errorLOOP;
+        };
+    
+    exitLCDdisplayLOOP: Nop();    
     Nop();
     Nop();
 }

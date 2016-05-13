@@ -10,9 +10,6 @@
 #ifndef XC_configMCU_H
 #define	XC_configMCU_H
 
-#include <xc.h>                  // include processor files  
-#include <pic18f46k22.h>
-
 typedef unsigned char  byte;     //  8 bits ....
 typedef unsigned int   word;     // 16 bits ....
 typedef unsigned long dword;

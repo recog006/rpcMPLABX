@@ -45,14 +45,17 @@
 // 
 extern unsigned char initRTCmodule(unsigned char devADDR);
 
+extern void DS3231_SetInfo(unsigned char byte0, unsigned char byte1);
+extern unsigned char DS3231_GetInfo(unsigned char byte0);
+
+extern void DS3231_IncrData(unsigned char selectBYTE);
+
 extern void DS3231_AMPM(void);
 extern void DS3231_HourMode(void);
-extern void DS3231_IncrData(unsigned char selectBYTE);
-extern void DS3231_GetCalendar(unsigned char *p1);
-extern void DS3231_SetInfo(unsigned char byte0, unsigned char byte1);
 
-extern unsigned char DS3231_GetTime(unsigned char *byte0);
-extern unsigned char DS3231_GetInfo(unsigned char byte0);
+extern unsigned char DS3231_GetTime(unsigned char *RTCbuf);
+extern void DS3231_GetCalendar(unsigned char *RTCbuf);
+
 extern unsigned char BCDToDecimal (unsigned char byte0);
 extern unsigned char DecimalToBCD (unsigned char byte0);
 

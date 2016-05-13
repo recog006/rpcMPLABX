@@ -12,6 +12,8 @@
 #include "I2C_driver/myI2C.h"
 #include "Initialize_MCU/configMCU.h"
 
+extern char RTCbuf[];
+
 //
 // FUNCTION: initRTCmodule
 //  
@@ -34,6 +36,9 @@
 unsigned char initRTCmodule(unsigned char devADDR){
     unsigned char btemp;
     
+    Nop();
+    Nop();
+//    
     I2C_Close();
     I2C_Init(39);    // I2C 100 KHZ, 16 MHZ OSC (see note in "myI2C.c")
     Nop();
@@ -57,9 +62,6 @@ unsigned char initRTCmodule(unsigned char devADDR){
         Nop();        
         return btemp;
     };
-    
-    Nop();
-    Nop();    
 }
 
 //==============================================================================
@@ -73,6 +75,8 @@ void DS3231_SetInfo(unsigned char byte0, unsigned char byte1){
     I2C_WriteByte(byte0);
     I2C_WriteByte(byte1);
     I2C_Stop();
+    Nop();
+    Nop();
 }
 
 //
@@ -195,29 +199,28 @@ void DS3231_IncrData(unsigned char selectBYTE){
 //Makes a change from AM to PM, or PM to AM.
 //==============================================================================
 void DS3231_AMPM(void){
-unsigned char byte0;
-byte0 = DS3231_GetInfo(HOURS);
-if((byte0 & 96) == 96)
-   {
-    byte0 &= 95;
-   }else if((byte0 & 64) == 64)
-   {
-    byte0 |= 96;
-   }
-DS3231_SetInfo(HOURS, byte0);
+    unsigned char byte0;
+    byte0 = DS3231_GetInfo(HOURS);
+    if((byte0 & 96) == 96){
+        byte0 &= 95;
+    } else if((byte0 & 64) == 64){
+        byte0 |= 96;
+    };
+    DS3231_SetInfo(HOURS, byte0);
 }
 
 
-//==============================================================================
-//Makes a change of 12hr to 24hr, or 24hr to 12hr.
-//==============================================================================
+// ==============================================================================
+// Makes a change of 12hr to 24hr, or 24hr to 12hr.
+// ==============================================================================
 void DS3231_HourMode(void){
-unsigned char byte0, byte1;
-byte0 = DS3231_GetInfo(HOURS);
-switch((byte0 & 96) >> 5){
-case 0:
-case 1:byte1 = BCDToDecimal(byte0);
-       if(byte1 == 0)
+    unsigned char byte0, byte1;
+    
+    byte0 = DS3231_GetInfo(HOURS);
+    switch((byte0 & 96) >> 5){
+        case 0:
+        case 1:byte1 = BCDToDecimal(byte0);
+            if(byte1 == 0)
          {
           byte1 = 12;
           byte1 = DecimalToBCD(byte1);
@@ -251,71 +254,106 @@ DS3231_SetInfo(HOURS, byte1);
 
 //==============================================================================
 //Gets the full time. "Hours:Minutes:Seconds"  <<01:35:12>>
-//*p: Save all time in this variable.
+//*RTCbuf: Save all time in this variable.
 //Return 0 if time is in 24 format.
 //Return 1 if time is in 24 format.
 //Return 2 if time is in AM format.
 //Return 3 if time  is in PM format.
 //==============================================================================
-unsigned char DS3231_GetTime(unsigned char *p){
-unsigned char byte0, byte1;
-unsigned char byte2[5];
-byte0 = DS3231_GetInfo(HOURS);
-byte1 = (byte0 & 96) >> 5;
-switch(byte1){
-case 0:case 1:byte0 = BCDToDecimal(byte0);      break;
-case 2:case 3:byte0 = BCDToDecimal(byte0 & 31); break;
-default:break;}
-sprintf(byte2,"%02d", byte0);
-*p = byte2[0]; p++; *p = byte2[1]; p++; *p = ':'; p++;
-byte0 = BCDToDecimal(DS3231_GetInfo(MINUTES));
-sprintf(byte2,"%02d", byte0);
-*p = byte2[0]; p++; *p = byte2[1]; p++; *p = ':'; p++;
-byte0 = BCDToDecimal(DS3231_GetInfo(SECONDS));
-sprintf(byte2,"%02d", byte0);
-*p = byte2[0]; p++; *p = byte2[1]; p++; *p = NULL;
-return(byte1);
+unsigned char DS3231_GetTime(unsigned char *RTCbuf){
+    unsigned char byte0, byte1;
+    unsigned char byte2[5];
+    
+    byte0 = DS3231_GetInfo(HOURS);
+    byte1 = (byte0 & 96) >> 5;
+    switch(byte1){
+        case 0: case 1: byte0 = BCDToDecimal(byte0);      break;
+        case 2: case 3: byte0 = BCDToDecimal(byte0 & 31); break;
+        default:break;
+    };
+    
+    sprintf(byte2,"%02d", byte0);
+    *RTCbuf = byte2[0]; RTCbuf++;
+    *RTCbuf = byte2[1]; RTCbuf++;
+    *RTCbuf = ':'; RTCbuf++;
+    Nop();
+    Nop();
+    
+    byte0 = BCDToDecimal(DS3231_GetInfo(MINUTES));
+    sprintf(byte2,"%02d", byte0);
+    *RTCbuf = byte2[0]; RTCbuf++; 
+    *RTCbuf = byte2[1]; RTCbuf++;
+    *RTCbuf = ':'; RTCbuf++;
+    
+    byte0 = BCDToDecimal(DS3231_GetInfo(SECONDS));
+    sprintf(byte2,"%02d", byte0);
+    *RTCbuf = byte2[0]; RTCbuf++;
+    *RTCbuf = byte2[1]; RTCbuf++;
+    *RTCbuf = NULL;
+    
+    return(byte1);
 }
 
+/* 
+ *  Gets the full calendar. "Day. Date Month. Year" <<Mon. 12 Jan. 15>>
+ * 
+ *  *RTCbuf: Save all calendar in this variable.
+ * 
+ *  -------------------------------------------------------------------  */
 
-//==============================================================================
-//Gets the full calendar. "Day. Date Month. Year" <<Mon. 12 Jan. 15>>
-//*p: Save all calendar in this variable.
-//==============================================================================
-void DS3231_GetCalendar(unsigned char *p){
-unsigned char byte0;
-unsigned char byte1[5];
-byte0 = BCDToDecimal(DS3231_GetInfo(DAY));
-switch(byte0){
-case 1:*p = 'M'; p++; *p = 'o'; p++; *p = 'n'; p++; break;
-case 2:*p = 'T'; p++; *p = 'u'; p++; *p = 'e'; p++; break;
-case 3:*p = 'W'; p++; *p = 'e'; p++; *p = 'd'; p++; break;
-case 4:*p = 'T'; p++; *p = 'h'; p++; *p = 'u'; p++; break;
-case 5:*p = 'F'; p++; *p = 'r'; p++; *p = 'i'; p++; break;
-case 6:*p = 'S'; p++; *p = 'a'; p++; *p = 't'; p++; break;
-case 7:*p = 'S'; p++; *p = 'u'; p++; *p = 'n'; p++; break;
-default:break;} *p = '.'; p++; *p = ' '; p++;
-byte0 = BCDToDecimal(DS3231_GetInfo(DATE));
-sprintf(byte1,"%02d", byte0);
-*p = byte1[0]; p++; *p = byte1[1]; p++; *p = ' '; p++;
-byte0 = BCDToDecimal(DS3231_GetInfo(MONTH));
-switch(byte0){
-case 1: *p = 'J'; p++; *p = 'a'; p++; *p = 'n'; p++; break;
-case 2: *p = 'F'; p++; *p = 'e'; p++; *p = 'b'; p++; break;
-case 3: *p = 'M'; p++; *p = 'a'; p++; *p = 'r'; p++; break;
-case 4: *p = 'A'; p++; *p = 'p'; p++; *p = 'r'; p++; break;
-case 5: *p = 'M'; p++; *p = 'a'; p++; *p = 'y'; p++; break;
-case 6: *p = 'J'; p++; *p = 'u'; p++; *p = 'n'; p++; break;
-case 7: *p = 'J'; p++; *p = 'u'; p++; *p = 'l'; p++; break;
-case 8: *p = 'A'; p++; *p = 'u'; p++; *p = 'g'; p++; break;
-case 9: *p = 'S'; p++; *p = 'e'; p++; *p = 'p'; p++; break;
-case 10:*p = 'O'; p++; *p = 'c'; p++; *p = 't'; p++; break;
-case 11:*p = 'N'; p++; *p = 'o'; p++; *p = 'v'; p++; break;
-case 12:*p = 'D'; p++; *p = 'e'; p++; *p = 'c'; p++; break;
-default:break;} *p = '.'; p++; *p = ' '; p++;
-byte0 = BCDToDecimal(DS3231_GetInfo(YEAR));
-sprintf(byte1,"%02d", byte0);
-*p = byte1[0]; p++; *p = byte1[1]; p++; *p = NULL;
+void DS3231_GetCalendar(unsigned char *RTCbuf){
+    unsigned char byte0;
+    unsigned char byte1[5];
+    
+    byte0 = BCDToDecimal(DS3231_GetInfo(DAY));
+    switch(byte0){
+        case 1:*RTCbuf = 'M'; RTCbuf++; *RTCbuf = 'o'; RTCbuf++; *RTCbuf = 'n'; RTCbuf++; break;
+        case 2:*RTCbuf = 'T'; RTCbuf++; *RTCbuf = 'u'; RTCbuf++; *RTCbuf = 'e'; RTCbuf++; break;
+        case 3:*RTCbuf = 'W'; RTCbuf++; *RTCbuf = 'e'; RTCbuf++; *RTCbuf = 'd'; RTCbuf++; break;
+        case 4:*RTCbuf = 'T'; RTCbuf++; *RTCbuf = 'h'; RTCbuf++; *RTCbuf = 'u'; RTCbuf++; break;
+        case 5:*RTCbuf = 'F'; RTCbuf++; *RTCbuf = 'r'; RTCbuf++; *RTCbuf = 'i'; RTCbuf++; break;
+        case 6:*RTCbuf = 'S'; RTCbuf++; *RTCbuf = 'a'; RTCbuf++; *RTCbuf = 't'; RTCbuf++; break;
+        case 7:*RTCbuf = 'S'; RTCbuf++; *RTCbuf = 'u'; RTCbuf++; *RTCbuf = 'n'; RTCbuf++; break;
+        default:break;
+    };
+    
+    *RTCbuf = '.'; RTCbuf++;
+    *RTCbuf = ' '; RTCbuf++;
+    
+    byte0 = BCDToDecimal(DS3231_GetInfo(DATE));
+    sprintf(byte1,"%02d", byte0);
+    *RTCbuf = byte1[0]; RTCbuf++;
+    *RTCbuf = byte1[1]; RTCbuf++;
+    *RTCbuf = ' '; RTCbuf++;
+    
+    byte0 = BCDToDecimal(DS3231_GetInfo(MONTH));
+    
+    switch(byte0){
+        case 1: *RTCbuf = 'J'; RTCbuf++; *RTCbuf = 'a'; RTCbuf++; *RTCbuf = 'n'; RTCbuf++; break;
+        case 2: *RTCbuf = 'F'; RTCbuf++; *RTCbuf = 'e'; RTCbuf++; *RTCbuf = 'b'; RTCbuf++; break;
+        case 3: *RTCbuf = 'M'; RTCbuf++; *RTCbuf = 'a'; RTCbuf++; *RTCbuf = 'r'; RTCbuf++; break;
+        case 4: *RTCbuf = 'A'; RTCbuf++; *RTCbuf = 'p'; RTCbuf++; *RTCbuf = 'r'; RTCbuf++; break;
+        case 5: *RTCbuf = 'M'; RTCbuf++; *RTCbuf = 'a'; RTCbuf++; *RTCbuf = 'y'; RTCbuf++; break;
+        case 6: *RTCbuf = 'J'; RTCbuf++; *RTCbuf = 'u'; RTCbuf++; *RTCbuf = 'n'; RTCbuf++; break;
+        case 7: *RTCbuf = 'J'; RTCbuf++; *RTCbuf = 'u'; RTCbuf++; *RTCbuf = 'l'; RTCbuf++; break;
+        case 8: *RTCbuf = 'A'; RTCbuf++; *RTCbuf = 'u'; RTCbuf++; *RTCbuf = 'g'; RTCbuf++; break;
+        case 9: *RTCbuf = 'S'; RTCbuf++; *RTCbuf = 'e'; RTCbuf++; *RTCbuf = 'p'; RTCbuf++; break;
+        case 10:*RTCbuf = 'O'; RTCbuf++; *RTCbuf = 'c'; RTCbuf++; *RTCbuf = 't'; RTCbuf++; break;
+        case 11:*RTCbuf = 'N'; RTCbuf++; *RTCbuf = 'o'; RTCbuf++; *RTCbuf = 'v'; RTCbuf++; break;
+        case 12:*RTCbuf = 'D'; RTCbuf++; *RTCbuf = 'e'; RTCbuf++; *RTCbuf = 'c'; RTCbuf++; break;
+        default:break;
+    };
+    
+    *RTCbuf = '.'; RTCbuf++;
+    *RTCbuf = ' '; RTCbuf++;
+    
+    byte0 = BCDToDecimal(DS3231_GetInfo(YEAR));
+    sprintf(byte1,"%02d", byte0);
+    *RTCbuf = byte1[0]; RTCbuf++;
+    *RTCbuf = byte1[1]; RTCbuf++;
+    *RTCbuf = NULL;
+    Nop();
+    Nop();
 }
 
 

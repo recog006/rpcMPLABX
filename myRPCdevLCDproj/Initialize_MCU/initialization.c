@@ -1,15 +1,9 @@
-//
-//  PIC18F46K22 MCU ........................
-//
-//  MODULE   : initialization.c
-//
+/*
+ * MODULE   : initialization.c
+ * 
+ *      */
 
 #include <xc.h>
-#include <p18f46k22.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 
 #include <plib\delays.h>
 #include <plib\usart.h>
@@ -17,8 +11,8 @@
 
 #include "initialization.h"
 
-extern byte bdum;
-extern word idum;
+extern unsigned char bdum;
+extern unsigned int idum;
 
 
 /* ****************   FUNCTIONS BEGIN HERE    ******************** */
@@ -46,12 +40,13 @@ void init_ports(void){
     TRISA = 0xFF; /* INPUTS */
 //
     LATB = 0;     /* Configure PORT B pi.................... */
-    TRISB = 0b11000111; 
-/* ICD pins, RB5=USB_CTS, RB4=LCD_EN, RB3=LCD_RW, RB2=PBSW3 ..... */
+    TRISB = 0b11000001; 
+/*  ICD pins,   RB5=USB_CTS,   RB4=LCD_EN,
+ *  RB3=LCD_RW, RB2=LCD_DB1,   RB1=LCD_DB0, RB0=RTC_INT .... */
 //
     LATC = 0;
     TRISC = 0b11111110;
-/* INPUTS/PLIB config'd ... TST_OUT ... */
+/* INPUTS/PLIB config'd ... RC5=USB_RTS ... TST_OUT ... */
 
 	LATD = 0;
     TRISD = 0xFF;   /* ALL INPUTS ... */
@@ -83,7 +78,6 @@ void init_ports(void){
 
 void initUSARTS(void){
 /*  USART config ...
- *  ( See datasheet of PIC18F26K22 ...... )
  *
  *  BAUD RATE : 19200 
  *
@@ -98,8 +92,7 @@ void initUSARTS(void){
                  USART_EIGHT_BIT &
                  USART_SINGLE_RX &
                  USART_BRGH_HIGH &
- 		         USART_ADDEN_OFF, 207);    /* 19200 baud */
-// 				  USART_ADDEN_OFF, 259);  
+ 		         USART_ADDEN_OFF, 207);    /* ... 19200 baud ..... */
 //
 //    BAUDCON1bits.DTRXP = 1;  // Rx data is "inverted" ... Default is zero ....
     Nop();
@@ -112,16 +105,13 @@ void initUSARTS(void){
 	Nop();
 	Nop();
 	Nop();
+    
+    USB_CTS = 0;   // Indicates MCU can accept data ......
 }
 
 
 void init(void){
     Nop();
-	Nop();
-// *********** OSCCON and OSCTUNE at default of reset ......................
-//    OSCCON = 0b01100111;   // 8 MHZ int osc ... (Same as 18F2321 original) 
-//    OSCCON = 0b00110111;   // 1 MHZ int osc .... 
-	Nop();
 	Nop();
 //
 // OSCCON2 and OSCTUNE at default of reset ....
@@ -149,12 +139,12 @@ void init(void){
     INTCON3bits.INT1IP = 1; /* INT 1 is high priority int    */
 
 	INTCONbits.TMR0IF = 0;  /* Clear TIMER 0 int flag bit    */
-	INTCONbits.TMR0IE = 1;  /* Enable TIMER 0 interrupt      */
-	T0CONbits.TMR0ON = 1;   /* Turn TIMER 0 ON               */
+	INTCONbits.TMR0IE = 0;  /* Enable TIMER 0 interrupt      */
+	T0CONbits.TMR0ON = 0;   /* Turn TIMER 0 ON               */
 
 	PIR1bits.TMR1IF = 0;    /* Timer 1 ON                    */
-	PIE1bits.TMR1IE = 1;    /*                               */
-	T1CONbits.TMR1ON = 1;   /*                               */
+	PIE1bits.TMR1IE = 0;    /*                               */
+	T1CONbits.TMR1ON = 0;   /*                               */
 
 //	  INTCONbits.INT0IF = 0;
 //	  INTCONbits.INT0IE = 1;  /* SSW int                     */
@@ -169,15 +159,14 @@ void init(void){
 //
 //  Serial comm int config bits ............................
 //
-    IPR1bits.RC1IP = 0;     /* LOW priority  ............... */
-    PIE1bits.RC1IE = 1;     /* Enable USART1 interrupt ..... */
+    IPR1bits.RC1IP = 1;     /* HIGH priority  .............. */
+    PIE1bits.RC1IE = 1;     /* USART1 interrupt ..... */
     PIR1bits.RC1IF = 0;     /* Clear flag bit .............. */
 //	
 	IPR3bits.RC2IP = 0;     /* LOW priority  ............... */
-	PIE3bits.RC2IE = 1;
+	PIE3bits.RC2IE = 0;
 	PIR3bits.RC2IF = 0;
 //
-    intrENAB();             /* Enable all interrupts ......  */
 	Nop();
 	Nop();
 

@@ -313,11 +313,12 @@ void initLCD(void){
     clearLCD();
     Nop();
     Nop();
-    Nop();
  }
 
 void LCDdisplaySTRING(unsigned char LCDlineCNTR, char *dispSTR){
-    byte btemp;  
+    byte indexCNTR;
+    static byte btemp1, btemp2, btemp3;          // "Reads" of "DDRAM" ....
+    static byte addrCNTR1, addrCNTR2, addrCNTR3;
     
     wait4BFclr();                  // NOT busy, proceed ....
     switch (LCDlineCNTR){
@@ -340,16 +341,49 @@ void LCDdisplaySTRING(unsigned char LCDlineCNTR, char *dispSTR){
     Nop();
     Nop();
     
-    btemp = 0;
-    while(dispSTR[btemp]!=0){
-        wait4BFclr();                  // NOT busy, proceed ....
-        writeLCDdata(dispSTR[btemp]);
-        btemp++;
+    indexCNTR = 0;
+    LCDdisplayLOOP: if (dispSTR[indexCNTR] == 0) goto exitLCDdisplayLOOP;
+        btemp1 = readBFaddrCNTR();
+        addrCNTR1 = 0x7F & btemp1;    // Get initial "DDRAM AC" ...
+        Nop();   Nop();   Nop();
+        wait4BFclr();                 // NOT busy, proceed ...
+        writeLCDdata(dispSTR[indexCNTR]);
+        Nop();   Nop();   Nop();
+        
+        btemp2 = readBFaddrCNTR();
+        addrCNTR2 = 0x7F & btemp2;    // Get initial "DDRAM AC" ...
+        Nop();   Nop();   Nop();
+        indexCNTR++;
+        wait4BFclr();                 // NOT busy, proceed ...
+        writeLCDdata(dispSTR[indexCNTR]);
+                    
+        btemp3 = readBFaddrCNTR();
+        addrCNTR3 = 0x7F & btemp3;    // Get initial "DDRAM AC" ...
+        Nop();   Nop();   Nop();
+        indexCNTR++;
+        wait4BFclr();                 // NOT busy, proceed ...
+        writeLCDdata(dispSTR[indexCNTR]);
+    
+    /* Note that addrCNTRx are prior to writes to LCD ....   */
+        
+        Nop();   
         Nop();
         Nop();
+     
+        btemp1 = readLCDdata(addrCNTR1);
+        btemp2 = readLCDdata(addrCNTR2);
+        btemp3 = readLCDdata(addrCNTR3);
+        
+    /* Note that btempx contains DDRAM values at addrCNTRx ....   */  
+        
         Nop();
-    }
-    Nop();
+        Nop();
+        errorLOOP: Nop();
+            Nop();
+            Nop();
+            goto errorLOOP;
+    
+    exitLCDdisplayLOOP: Nop();    
     Nop();
     Nop();
 }

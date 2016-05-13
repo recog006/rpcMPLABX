@@ -5,11 +5,12 @@
 //  AUTHOR   : RGF
 //  WORKDATE : APRIL 2016
 //
-#ifndef __MSGSERIALS_H
-#define __MSGSERIALS_H
+#ifndef XC_MSGSERIALS_H
+#define XC_MSGSERIALS_H
 
 extern void btoa(void);
-extern void htoa(void);
+extern void htoa(void);       // WORD "idum" into "sbuf" 
+extern void bytetohex(void);
 
 extern void crlf_print(void);
 extern void id_print(void);

@@ -6,7 +6,7 @@
  */
 
 #include <xc.h>
-#include <pic18f46k22.h>
+// #include <pic18f46k22.h>
 
 #include "Initialize_MCU/configMCU.h"
 #include "Initialize_MCU/initialization.h"
