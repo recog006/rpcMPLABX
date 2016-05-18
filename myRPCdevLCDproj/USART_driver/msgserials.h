@@ -8,9 +8,10 @@
 #ifndef XC_MSGSERIALS_H
 #define XC_MSGSERIALS_H
 
-extern void btoa(void);
-extern void htoa(void);       // WORD "idum" into "sbuf" 
-extern void bytetohex(void);
+extern void byteTOascBINARY(unsigned char b2conv);
+extern void wordTOascHEX(unsigned int w2conv); 
+
+extern void byteTOascHEX(unsigned char b2conv);
 
 extern void crlf_print(void);
 extern void id_print(void);

@@ -46,20 +46,20 @@ typedef unsigned long dword;
 #define LCD_PWR   LATEbits.LATE0
 #define BACKLIGHT LATEbits.LATE1
 #define LCD_RS    LATEbits.LATE2
-//
-// LCD data lines are
-// PORTD bits 7 thru 3
-// LCD data bit 0 is RB1
-// LCD data bit 1 is RB2
-//
+
+/* 
+ * LCD data lines are PORTD 
+ *   with the following exceptions
+ *   [ FOR INPUT from PINS only ]  ...   */
+
 #define LCDdb0    PORTBbits.RB1
 #define LCDdb1    PORTBbits.RB2
-//
+#define LCDdb3    PORTBbits.RB5
+#define LCDdb4    PORTCbits.RC5
 
-// I2C CONTROL ................................
+/* ....  I2C CONTROL ................................ */
 #define I2C1_SCL	TRISCbits.TRISC3
 #define I2C1_SDA	TRISCbits.TRISC4
-
 
 /* *****  EXPORTED FUNCTION PROTOTYPES **** */
 extern void intrENAB(void);

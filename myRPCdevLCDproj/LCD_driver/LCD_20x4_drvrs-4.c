@@ -246,7 +246,6 @@ void shiftcursorLCDleft(void){
  *  ***********************************************************
  * 
  *  FUNCTION: initLCD
- *  [ SIMPLIFIED internal reset ? ]
  * 
  *  NOTES:
  *  [ LCD PWR observed in 50 usec ... ]
@@ -293,7 +292,7 @@ void initLCD(void){
     LATB1 = 0;            /* INITIAL set of LCD "db" inputs ..... */
     LATB2 = 0;
     LATD2 = 0;
-    LATB5 = 1;       /* 0x38 or 0x30 -> 0x38 is OK: 5-18-2016 ... */
+    LATB5 = 0;
     
     LATC5 = 1;
     LATD5 = 1;
@@ -320,25 +319,86 @@ void initLCD(void){
     Delay_msec(100);          /* .... tbd ... NEEDED? .... */
     Nop();  
     Nop();
+    Nop();    
+     
+    for (btemp=0; btemp<4; btemp++){
+            strobeLCDenable();
+    Delay_msec(20);           /* Data sheet "wait time > 4.1 msec" ... */
+    Nop();  Nop();  Nop();  
+        
+        
+    }
+    LATB5 = 1;                /* CHANGE MCU output to 0x38 ... */
+    Nop();  Nop();  Nop();   
+/*
+ *  "STROBE" the enable ... MCU pins in OUTPUT ...............
+ */
+    strobeLCDenable();
+    Delay_msec(20);           /* Data sheet "wait time > 4.1 msec" ... */
+    Nop();  Nop();  Nop();  
+    
+    strobeLCDenable();
+    Delay_msec(20);           /* Data sheet "wait time > 100 usec" ... */
+    Nop();  Nop();  Nop(); 
+    
+    strobeLCDenable();
+    Delay_msec(20);           /* NO WAIT time specified here ....... */
+    Nop();  Nop();  Nop(); 
+ 
+ /* Effectively, the CMD 0x38 has been strobed out THREE times ..... 
+  * Now change to 0x08 ...
+  *                                                                  */
+    LATB5 = 1;   LATC5 = 0;   LATD5 = 0;
+    Nop();   Nop();   Nop();    
+
+    strobeLCDenable();             /*  Write CMD 0x08   */
+    Delay_msec(20);     
+    Nop();   Nop();   Nop();   
+//   
+    LATB5 = 0;   LATB1 = 1; 
+    Nop();   Nop();   Nop();   
+   
+    strobeLCDenable();             /*  Write CMD 0x01   */ 
+    Delay_msec(20);    
+    Nop();   Nop();   Nop();   
+//    
+    LATB1 = 0;   LATB2 = 1;    LATD2 = 1; 
+    Nop();   Nop();   Nop();
+    
+    strobeLCDenable();             /*  Write CMD 0x06   */  
+    Delay_msec(20);    
+    Nop();   Nop();   Nop();   
+//      
+    homeLCD();
+    dispLCD();
+    clearLCD();
+    Nop();
+    Nop();
+    Nop();
+  
+ /* ***
+  * *** HARDWARE/SOFTWARE DEBUG HERE ............
+  * *** IS the LCD properly initialized? ........
+  * *** IS written data actually in "DDRAM" ? ...
+  *                                                 */  
+//    btemp = readLCDdata(0);
+//    Nop();
+//    Nop();
+//    Nop();
+    
+    wait4BFclr();
+    writeLCDdata(0x52);
+    Nop();
+    Nop();   
+    Nop();
+    
+    btemp = readLCDdata(0);
+    Nop();
+    Nop();
     Nop();   
     
-   for (btemp=0; btemp<4; btemp++){
-        strobeLCDenable();
-        Delay_msec(20);           /* Data sheet "wait time > 4.1 msec" ... */
-        Nop();  Nop();  Nop();  
-    };
     
- /* Effectively, the CMD 0x30 has been strobed out THREE times ... */
-    
- /* Display ON/OFF control .... */
-    
-    writeLCDcmd(0x0E);
-    Delay_msec(20); 
-    writeLCDcmd(0x06);
-    Delay_msec(20); 
-    Nop();
-    Nop();  
-}
+ }
 
 /*  *** END of initLCD function ..............................   */
 

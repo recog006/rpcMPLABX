@@ -14,6 +14,9 @@
 extern unsigned char bdum;
 extern unsigned int idum;
 
+extern unsigned char rbyte1;            
+extern unsigned char cstatus;
+
 
 /* ****************   FUNCTIONS BEGIN HERE    ******************** */
 
@@ -38,15 +41,19 @@ void intrDISAB(void){
 void init_ports(void){
     LATA = 0;     
     TRISA = 0xFF; /* INPUTS */
-//
+
     LATB = 0;     /* Configure PORT B pi.................... */
-    TRISB = 0b11000001; 
-/*  ICD pins,   RB5=USB_CTS,   RB4=LCD_EN,
- *  RB3=LCD_RW, RB2=LCD_DB1,   RB1=LCD_DB0, RB0=RTC_INT .... */
-//
+    TRISB = 0xE7; 
+/*
+ *  INIT:  0b 11 1 0  0 1 1 1
+ *  ICD pins,   RB5=LCDdb3,    RB4=LCD_EN,
+ *  RB3=LCD_RW, RB2=LCD_DB1,   RB1=LCD_DB0, RB0=RTC_INT ....
+ * 
+ *  NOTE: Init for LCD and RTC to set OUTPUTS .............. */
+
     LATC = 0;
-    TRISC = 0b11111110;
-/* INPUTS/PLIB config'd ... RC5=USB_RTS ... TST_OUT ... */
+    TRISC = 0b11011110;
+/* INPUTS/PLIB config'd ... RC5=LCDdb4 ... TST_OUT ... */
 
 	LATD = 0;
     TRISD = 0xFF;   /* ALL INPUTS ... */
@@ -87,7 +94,7 @@ void initUSARTS(void){
 //
     BAUDCON1bits.BRG16 = 1;
     Open1USART( USART_TX_INT_OFF &
-                 USART_RX_INT_ON &
+                USART_RX_INT_OFF &
                USART_ASYNCH_MODE &
                  USART_EIGHT_BIT &
                  USART_SINGLE_RX &
@@ -101,7 +108,7 @@ void initUSARTS(void){
 //  Initialize character reception...................
 //
     RCSTA1bits.CREN = 1;    // Enable reception .....
-    RCSTA2bits.CREN = 1;    // Enable reception .....
+//    RCSTA2bits.CREN = 1;    // Enable reception .....
 	Nop();
 	Nop();
 	Nop();
@@ -160,7 +167,7 @@ void init(void){
 //  Serial comm int config bits ............................
 //
     IPR1bits.RC1IP = 1;     /* HIGH priority  .............. */
-    PIE1bits.RC1IE = 1;     /* USART1 interrupt ..... */
+    PIE1bits.RC1IE = 0;     /* USART1 interrupt ..... */
     PIR1bits.RC1IF = 0;     /* Clear flag bit .............. */
 //	
 	IPR3bits.RC2IP = 0;     /* LOW priority  ............... */
